@@ -1,0 +1,53 @@
+#!/bin/sh
+board=`cat /tmp/sysinfo/board_name`
+. /etc/openwrt_release
+. /etc/device_info
+
+has_root_pwd() {
+    local pwd=$([ -f "$1" ] && cat "$1")
+    pwd="${pwd#*root:}"
+    pwd="${pwd%%:*}"
+
+    test -n "${pwd#[\!x]}"
+}
+has_root_pwd /etc/shadow && exit 0
+
+echo root:welcome | chpasswd
+
+uci -q batch <<-EOF >/dev/null
+set dropbear.@dropbear[0].Port=8888
+commit dropbear
+set system.@system[0].zonename='Asia/Shanghai'
+set system.@system[0].timezone='CST-8'
+commit system
+set firewall.@zone[0].input='REJECT'
+set firewall.@rule[0].src='*'
+set firewall.@rule[1].src='*'
+set firewall.@rule[2].src='*'
+set firewall.@rule[3].src='*'
+set firewall.@rule[4].src='*'
+set firewall.@rule[5].src='*'
+set firewall.@rule[6].src='*'
+add firewall rule
+set firewall.@rule[-1].name='Allow-HTTP-Access'
+set firewall.@rule[-1].src='*'
+set firewall.@rule[-1].proto='tcp'
+set firewall.@rule[-1].dest_port='80'
+set firewall.@rule[-1].target='ACCEPT'
+add firewall rule
+set firewall.@rule[-1].name='Allow-SSH-Access'
+set firewall.@rule[-1].src='*'
+set firewall.@rule[-1].proto='tcp'
+set firewall.@rule[-1].dest_port='8888'
+set firewall.@rule[-1].target='ACCEPT'
+commit dropbear
+EOF
+
+wan=`uci get network.wan.ifname`
+[ "$wan" == "eth1" ] && uci -q batch <<-EOF >/dev/null
+set network.wan.ifname='eth0'
+set network.wan6.ifname='eth0'
+set network.lan.ifname='eth1'
+commit network
+EOF
+exit 0
