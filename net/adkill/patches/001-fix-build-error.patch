@@ -1,0 +1,34 @@
+diff -Nur a/advkill.c b/advkill.c
+--- a/advkill.c
++++ b/advkill.c
+@@ -458,7 +458,9 @@
+ static struct nf_hook_ops nfho_forward = 
+ {
+ 	.hook		= hook_func,
++#if (LINUX_VERSION_CODE < KERNEL_VERSION (4, 0, 0))
+ 	.owner		= THIS_MODULE,
++#endif
+ 	.pf		= PF_INET,
+ #if (LINUX_VERSION_CODE < KERNEL_VERSION (2, 6, 26))
+ 	.hooknum	= NF_IP_FORWARD,
+diff -Nur a/advproc.c b/advproc.c
+--- a/advproc.c
++++ b/advproc.c
+@@ -133,7 +133,16 @@
+ #else
+ static int advkill_conf_seq_read(struct seq_file *seq, void *v)
+ {
++#if (LINUX_VERSION_CODE < KERNEL_VERSION (4, 0, 0))
+ 	return seq_printf(seq, "%s\n", advkillconfdata);
++#else
++	seq_printf(seq, "%s\n", advkillconfdata);
++    if (seq->count < seq->size){
++        return 0;
++    } else {
++        return -1;
++    }
++#endif
+ }
+ static int advkill_conf_seq_open(struct inode *inode, struct file *file)
+ {
+
