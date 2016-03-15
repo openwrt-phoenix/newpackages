@@ -5,6 +5,7 @@
 #else
 #include <arpa/inet.h>
 #include <errno.h>
+#include <sys/time.h>
 typedef long long __int64;
 #endif
 #include "bytestool.h"
