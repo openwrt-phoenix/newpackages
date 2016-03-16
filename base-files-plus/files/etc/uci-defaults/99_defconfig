@@ -49,5 +49,9 @@ set network.wan.ifname='eth0'
 set network.wan6.ifname='eth0'
 set network.lan.ifname='eth1'
 commit network
+set dhcp.lan.start='10'
+set dhcp.lan.limit='200'
+set dhcp.lan.leasetime='10m'
+commit network
 EOF
 exit 0
