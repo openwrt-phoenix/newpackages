@@ -56,7 +56,7 @@ Package/shadowsocks-libev-polarssl/conffiles = $(Package/shadowsocks-libev/conff
 
 define Package/shadowsocks-libev/postinst
 #!/bin/sh
-uci -q batch <<-EOF >/dev/null
+[ -x /sbin/uci ] && uci -q batch <<-EOF >/dev/null
 	delete firewall.shadowsocks_libev
 	set firewall.shadowsocks_libev=include
 	set firewall.shadowsocks_libev.type=script
@@ -74,7 +74,7 @@ ifeq ($(BUILD_VARIANT),polarssl)
 endif
 
 define Package/shadowsocks-libev/install
-	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_DIR) $(1)/usr/bin $(1)/etc/uci-defaults
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/ss-{redir,tunnel} $(1)/usr/bin
 	$(INSTALL_BIN) ./files/ss-rules $(1)/usr/bin
 	$(INSTALL_DIR) $(1)/etc/config
@@ -83,6 +83,7 @@ define Package/shadowsocks-libev/install
 	$(INSTALL_BIN) ./files/shadowsocks-libev.init $(1)/etc/init.d/shadowsocks-libev
 	$(INSTALL_DIR) $(1)/usr/share/shadowsocks-libev
 	$(INSTALL_DATA) ./files/firewall.include $(1)/usr/share/shadowsocks-libev/firewall.include
+	$(INSTALL_BIN) ./files/uci_defaults_shadowsocks-libev $(1)/etc/uci-defaults/50-shadowsocks-libev
 endef
 
 Package/shadowsocks-libev-polarssl/install = $(Package/shadowsocks-libev/install)
