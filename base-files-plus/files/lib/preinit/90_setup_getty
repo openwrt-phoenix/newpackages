@@ -1,0 +1,30 @@
+#!/bin/sh
+
+do_setup_getty ()
+{
+    local cmdline console dev spead
+
+    [ -f /sbin/getty ] || return 1
+    if [ -c /dev/tty1 ];then
+        echo set getty to tty1 spead 9600 ...
+        sed -i "/tty1::askfirst:/ctty1::respawn:/sbin/getty 9600 tty1 vt100" /etc/inittab
+    fi
+
+    if read cmdline < /proc/cmdline; then
+        case "$cmdline" in
+            *console=*)
+            console="${cmdline##*console=}"
+            console="${console%% *}"
+            console="${console%%n*}"
+            ;;
+        esac
+        dev="${console%%,*}"
+        spead="${console##*,}"
+        if [ -n "$dev" -a -n "$spead" -a -c /dev/$dev ];then
+            echo set getty to $dev spead $spead ...
+            sed -i "/$dev::askfirst:/c$dev::respawn:/sbin/getty -L $spead $dev vt100" /etc/inittab
+            sed -i "/::askconsole:/c$dev::respawn:/sbin/getty -L $spead $dev vt100" /etc/inittab
+        fi
+    fi
+}
+[ "$INITRAMFS" = "1" ] || boot_hook_add preinit_main do_setup_getty
